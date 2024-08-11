@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+{% block content %}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
+    <script>
+      const socket = io();
+      function displayhide()
+      {
+        document.getElementById("myModal").style.display="none";
+      }
+      function displayhidedoubttext()
+      {
+        document.getElementById("doubttext").style.display="none";
+      }
+      function displayhidedoubtvoice()
+      {
+        document.getElementById("speak").style.display="none";
+        document.getElementById("doubtvoice").style.display="none";
+      }
+    </script>
+    <!-- <script src="/assets/script-prod.js"></script> -->
+    <style>
+      .chat-popup {
+        display: block;
+        position: fixed;
+        top: 0;
+        margin-top: 50px;
+        right: 15px;
+        border: 3px solid #f1f1f1;
+        z-index: 9;
+      }
+      .chat-popup2 {
+        display: block;
+        position: fixed;
+        top: 0;
+        margin-top: 350px;
+        right: 15px;
+        border: 3px solid #f1f1f1;
+        z-index: 9;
+      }
+      </style>
+    <div class="chat-popup" id="speak" style="display: none">
+      <!-- <img src="/assets/speak.gif" style="width:250px;height:250px;"> -->
+      <video width="300px" height="300px" autoplay loop>
+        <source src="/assets/speak.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div class="chat-popup2" id="speakcontrol" style="display: none">
+      <!-- <img src="/assets/speak.gif" style="width:250px;height:250px;"> -->
+      <audio controls autoplay id="myaud" src="">
+       <!-- <source src="" type="audio/mpeg"> -->
+      </audio>  
+    </div>
+    <div class="modal" id="doubtvoice" style="display: none">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+    
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title" id="modaltitledoubtvoice">Ask Doubts - Voice</h4>
+          </div>
+    
+          <!-- Modal body -->
+          <div class="modal-body" id="modalbodydoubtvoice">
+            <img src="/assets/lg.gif" width="200" height="200" id="loadingimgvoice" style="display: none; margin-left: auto;margin-right: auto; width: 50%">
+      <!--     <img src="/assets/speak.gif" width="298px" height="498" id="speak" style="display: none; margin-left: auto;margin-right: auto; width: 50%"> -->
+            <p id="q1" style="display: none;">Question Asked : <span id="result"></span></p>
+            <p id="a1" style="display: none;">Answer : <span id="answer"></span></p>
+            <p id="s1" style="display: none;">Status : <span id="status1"></span></p>
+          </div>
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <!-- <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="doubtvoiceaction()">Ask</button> -->
+            <!--<button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="voiceprod" onclick="doubtvoiceactionprod()">Ask</button> -->
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="record">Record</button>
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="stoprecord" disabled>Stop Record And Send</button>
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="closevoicemodal" onclick="doubtvoicestop()">Close</button>
+            <!--<button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="displayhidedoubtvoice()">Close</button> -->
+          </div>
+    
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="doubttext" style="display: none">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+    
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title" id="modaltitledoubttext">Ask Doubts - Text</h4>
+          </div>
+    
+          <!-- Modal body -->
+          <div class="modal-body" id="modalbodydoubttext">
+            
+          </div>
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <input type="text" name="question" id="question" size="72">
+            <img src="/assets/lg.gif" width="320" height="200" id="loadingimg" style="display: none">
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="asktextdoubtbtn" onclick="doubttextaction()">Ask</button>
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="asktextdoubtclosebtn" onclick="displayhidedoubttext()">Close</button>
+          </div>
+    
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="myModal" style="display: none">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+    
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title" id="modaltitle"></h4>
+          </div>
+    
+          <!-- Modal body -->
+          <div class="modal-body" id="modalbody">
+          </div>
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="displayhide()">Close</button>
+          </div>
+    
+        </div>
+      </div>
+    </div>
+    <br>
+    <h1>Basic Mathematics</h1>
+    <br>
+    <table class="table table-primary" style="width:500px">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Operations</th>
+          <th scope="col">Content</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">1</th>
+          <td>Addition</td>
+          <td><button class="btn btn-success" onclick="displaymodal('add')">Click</button></td>
+        </tr>
+        <tr>
+          <th scope="row">2</th>
+          <td>Subtraction</td>
+          <td><button class="btn btn-success" onclick="displaymodal('subtract')">Click</button></td>
+        </tr>
+        <tr>
+          <th scope="row">3</th>
+          <td>Multiplication</td>
+          <td><button class="btn btn-success" onclick="displaymodal('multiply')">Click</button></td>
+        </tr>
+        <tr>
+          <th scope="row">4</th>
+          <td>Division</td>
+          <td><button class="btn btn-success" onclick="displaymodal('divide')">Click</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <button type="button" class="btn btn-primary ml-2" onclick="displayvoice()">Ask Doubts-Voice</button>
+    <button type="button" class="btn btn-success mr-2" onclick="displaydoubtmodal()">Ask Doubts-Text</button>
+    <script>
+    let aud = document.getElementById("myaud");
+    aud.onended = function() {
+      //alert("The audio has ended");
+      document.getElementById("speak").style.display="none";
+      document.getElementById("speakcontrol").style.display="none";
+      document.getElementById("record").disabled=false;
+      document.getElementById("stoprecord").disabled=true;
+      document.getElementById("closevoicemodal").disabled=false;
+    };
+    socket.on("questionasked", (data) => {
+      //alert(data);
+      //document.getElementById("captions").innerHTML = data.transcription;
+      document.getElementById("result").innerHTML=data['question'];
+      document.getElementById("q1").style.display="block";
+      document.getElementById("status1").innerHTML="Generating Voice";
+      document.getElementById("s1").style.display="block";
+      document.getElementById("loadingimgvoice").style.display="block";
+    });
+
+    socket.on("voicestart1", (data) => {
+      //alert(data);
+      //document.getElementById("captions").innerHTML = data.transcription;
+      //document.getElementById("result").innerHTML=data['question'];
+      //document.getElementById("q1").style.display="block";
+      //document.getElementById("status1").innerHTML="Generating Voice";
+      document.getElementById("s1").style.display="none";
+      document.getElementById("loadingimgvoice").style.display="none";
+      document.getElementById("a1").style.display="block";
+      document.getElementById("answer").innerHTML=data['answer'];
+      document.getElementById("speak").style.display="block";
+      document.getElementById("speakcontrol").style.display="block";
+      document.getElementById("myaud").src='/mp3';
+      document.getElementById("closevoicemodal").disabled=false;
+      //document.getElementById("loadingimgvoice").style.display="block";
+    });
+      /*
+      socket.on("displaydetails",(data)=>{
+        document.getElementById("loadingimgvoice").style.display="none";
+        document.getElementById("speak").style.display="block";
+        document.getElementById("q1").style.display="block";
+        document.getElementById("a1").style.display="block";
+        document.getElementById("result").innerHTML=data.result;
+        document.getElementById("answer").innerHTML=data.answer;
+      }); */
+      const record = document.getElementById("record");
+    const stop = document.getElementById("stoprecord");
+    navigator.mediaDevices.getUserMedia({audio: true},).then((stream) => {
+        const mediaRecorder = new MediaRecorder(stream);
+        record.onclick = () => {
+        document.getElementById("q1").style.display="None";
+        document.getElementById("a1").style.display="None";
+        document.getElementById("s1").style.display="None";
+        stop.disabled=false;
+        record.disabled=true;
+        document.getElementById("closevoicemodal").disabled=true;
+        mediaRecorder.start();
+        console.log(mediaRecorder.state);
+        console.log("recorder started");
+        };
+        let chunks = [];
+        mediaRecorder.ondataavailable = (e) => {
+        chunks.push(e.data);
+        };
+        stop.onclick = () => {
+        mediaRecorder.stop();
+        //record.disabled=false;
+        stop.disabled=true;
+        console.log(mediaRecorder.state);
+        console.log("recorder stopped");
+        };
+        mediaRecorder.onstop = (e) => {
+        console.log("recorder stopped");
+        const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
+        chunks = [];
+        console.log(blob);
+        var fd=new FormData();
+        fd.append("file",blob,'file');
+        fetch('http://127.0.0.1:5000/receive', {
+              method: 'POST',
+              body: fd,
+          }).then(response => console.log(response));        
+    };
+        }).catch((err) => {
+          console.error(`The following getUserMedia error occurred: ${err}`);
+        });
+      socket.on("voicecompleted",()=>{
+        document.getElementById("speak").style.display="none";
+      });
+
+      function displayvoice()
+      {
+        document.getElementById("q1").style.display="none";
+        document.getElementById("a1").style.display="none";
+        document.getElementById("doubtvoice").style.display="block";
+      }
+      function displaydoubtmodal()
+      {
+        document.getElementById("question").value="";
+        document.getElementById("modalbodydoubttext").innerHTML="";
+        document.getElementById("doubttext").style.display="block";
+      }
+      function doubtvoicestop()
+      {
+        document.getElementById("q1").style.display="none";
+        document.getElementById("s1").style.display="none";
+        document.getElementById("a1").style.display="none";
+        document.getElementById("speak").style.display="none";
+        document.getElementById("speakcontrol").style.display="none";
+        document.getElementById("myaud").src='';
+        //document.getElementById("speakcontrol").innerHTML="";
+        document.getElementById("doubtvoice").style.display="none";
+        document.getElementById("record").disabled=false;
+        /*var SendInfo={"cmd":"stopvoice"}
+        $.ajax({
+            type: 'post',
+            url: '/stopvoice',
+            data: JSON.stringify(SendInfo),
+            contentType: "application/json; charset=utf-8",
+            //traditional: true,
+            success: function (data) {
+              document.getElementById("speak").style.display="none";
+            }
+        });*/
+      }
+      /*
+      function doubtvoiceaction2()
+      {
+        document.getElementById("loadingimgvoice").style.display="block";
+        var SendInfo={"doubt":"voice"};
+        $.ajax({
+            type: 'post',
+            url: '/doubtvoicemode',
+            data: JSON.stringify(SendInfo),
+            contentType: "application/json; charset=utf-8",
+            //traditional: true,
+            success: function (data) {
+              document.getElementById("loadingimgvoice").style.display="none";
+              document.getElementById("speak").style.display="block";
+              document.getElementById("q1").style.display="block";
+              document.getElementById("a1").style.display="block";
+              document.getElementById("result").innerHTML=data.result;
+              document.getElementById("answer").innerHTML=data.answer;
+            }
+        });
+
+      }*/
+      /*
+      function doubtvoiceaction()
+      {
+        document.getElementById("loadingimgvoice").style.display="block";
+        document.getElementById("q1").style.display="none";
+        document.getElementById("a1").style.display="none";
+        var SendInfo={"doubt":"voice"};
+        socket.emit("voiceaction", SendInfo);
+        //$.ajax({
+        //    type: 'post',
+        //    url: '/doubtvoicemode',
+        //    data: JSON.stringify(SendInfo),
+        //    contentType: "application/json; charset=utf-8",
+            //traditional: true,
+         //   success: function (data) {
+         //     document.getElementById("loadingimgvoice").style.display="none";
+         //     document.getElementById("speak").style.display="block";
+          //    document.getElementById("q1").style.display="block";
+           //   document.getElementById("a1").style.display="block";
+           //   document.getElementById("result").innerHTML=data.result;
+           //   document.getElementById("answer").innerHTML=data.answer;
+            //}
+        //});
+
+      } */
+      /*
+      function doubtvoiceactionprod()
+      {
+        document.getElementById("q1").style.display="none";
+        document.getElementById("s1").style.display="none";
+        document.getElementById("a1").style.display="none";
+        if (!isRecording) 
+        {
+          //alert("Recording");
+          //socket.emit("toggle_transcription", { action: "start" });
+          //startRecording().catch((error) =>
+          //console.error("Error starting recording:", error)
+          //);
+          //isRecording=!isRecording;
+          document.getElementById("voiceprod").innerHTML="Stop Asking";
+          socket.emit("toggle_transcription", { action: "start" });
+          //await new Promise(r => setTimeout(r, 2000));
+          startRecording().catch((error) =>
+          console.error("Error starting recording:", error)
+          );
+        } 
+        else 
+        { 
+          //alert("Recording stopped");
+          //isRecording=!isRecording;
+          document.getElementById("voiceprod").innerHTML="Start Asking";
+          stopRecording().catch((error) =>
+          console.error("Error stopping recording:", error)
+          );
+          //stopRecording().catch((error) =>
+          //console.error("Error stopping recording:", error)
+        //);
+        }
+      }
+        */
+      function doubttextaction()
+      {
+        //document.getElementById("question").value="";
+        document.getElementById("modalbodydoubttext").innerHTML="";
+        document.getElementById("asktextdoubtclosebtn").disabled=true;
+        document.getElementById("asktextdoubtbtn").disabled=true;
+        //modal2.style.display = "block";
+        document.getElementById("loadingimg").style.display="block";
+        var SendInfo={"doubt":"text","question":document.getElementById("question").value};
+        $.ajax({
+            type: 'post',
+            url: '/doubttextmode',
+            data: JSON.stringify(SendInfo),
+            contentType: "application/json; charset=utf-8",
+            //traditional: true,
+            success: function (data) {
+                //alert(data.data2);
+                //var modal2=document.getElementById("doubttext");
+                //modal2.style.display = "block";
+                //var title2=document.getElementById("modaltitledoubttext");
+                //title2.innerHTML="Doubts-Text";
+                document.getElementById("loadingimg").style.display="none";
+                var modalbody2=document.getElementById("modalbodydoubttext");
+                modalbody2.innerHTML="";
+                modalbody2.innerHTML=data.answer;
+                document.getElementById("asktextdoubtclosebtn").disabled=false;
+                document.getElementById("asktextdoubtbtn").disabled=false;
+                document.getElementById("question").value="";
+                //var x = document.createElement("PRE");
+                //var t = document.createTextNode(data.answer);
+                //x.appendChild(t);
+                //document.body.appendChild(x);
+                //modalbody2.appendChild(x);
+            }
+        });
+      }
+
+      function displaymodal(add)
+      {
+        var SendInfo={"operation":add}
+        $.ajax({
+            type: 'post',
+            url: '/displaycontent',
+            data: JSON.stringify(SendInfo),
+            contentType: "application/json; charset=utf-8",
+            //traditional: true,
+            success: function (data) {
+                //alert(data.data2);
+                var modal1=document.getElementById("myModal");
+                modal1.style.display = "block";
+                var title=document.getElementById("modaltitle");
+                title.innerHTML=data.ops;
+                var modalbody1=document.getElementById("modalbody");
+                modalbody1.innerHTML="";
+                modalbody1.innerHTML=data.data2;
+                //var x = document.createElement("PRE");
+                //var t = document.createTextNode(data.data2);
+                //x.appendChild(t);
+                //document.body.appendChild(x);
+                //modalbody1.appendChild(x);
+            }
+        });
+      }
+
+    </script>
+   <!-- <script src="/assets/script-prod.js"></script> -->
+{% endblock %}
